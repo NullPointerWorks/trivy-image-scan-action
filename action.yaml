@@ -1,38 +1,34 @@
-# .github/actions/setup-java-maven/action.yml
-name: "Setup Java and Build"
-description: "Sets up JDK, caches Maven dependencies, and builds the project"
-
+name: docker image scanning
+description: "Scan Docker images for vulnerabilities using Trivy"
 inputs:
-  java-version:
-    description: "Java version to install"
-    required: false
-    default: "17"
-
-  build-command:
-    description: "Command to build the project"
-    required: false
-    default: "mvn -B clean package"
-
-outputs:
-  build-status:
-    description: "Build result message"
-    value: ${{ steps.build_info.outputs.status }}
-
+  image-name:
+    description: "Name of the Docker image to scan"
+    required: true
 runs:
   using: "composite"
   steps:
-    - name: Set up Java
-      uses: actions/setup-java@v4
+    - name: Install Trivy
+      shell: bash
+      run: |
+        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+   
+    - name: download trivy html template
+      shell: bash
+      run: |
+        curl -o trivy_template.html https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/html.tpl 
+    - name: Scan Docker image
+      shell: bash
+      run: |
+        trivy image --format template --template "@trivy_template.html" -o trivy_report.html ${{ inputs.image-name }}
+    - name: Upload Trivy report
+      uses: aquasecurity/trivy-action@v0.35.0
       with:
-        distribution: temurin
-        java-version: ${{ inputs.java-version }}
-        cache: maven
-
-    - name: Build project
-      shell: bash
-      run: ${{ inputs.build-command }}
-
-    - name: Set output
-      id: build_info
-      shell: bash
-      run: echo "status=Build completed successfully" >> "$GITHUB_OUTPUT"
+        image-ref: ${{ inputs.image-name }}
+        format: template
+        template: "@trivy_template.html"
+        output: trivy_report.html
+    - name: Upload Trivy report as artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: trivy-report
+        path: trivy_report.html
