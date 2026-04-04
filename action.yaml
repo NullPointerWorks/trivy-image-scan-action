@@ -7,19 +7,10 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Install Trivy
-      shell: bash
-      run: |
-        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
-   
     - name: download trivy html template
       shell: bash
       run: |
         curl -o trivy_template.html https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/html.tpl 
-    - name: Scan Docker image
-      shell: bash
-      run: |
-        trivy image --format template --template "@trivy_template.html" -o trivy_report.html ${{ inputs.image-name }}
     - name: Upload Trivy report
       uses: aquasecurity/trivy-action@v0.35.0
       with:
