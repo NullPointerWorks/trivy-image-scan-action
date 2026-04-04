@@ -11,6 +11,7 @@ runs:
       shell: bash
       run: |
         curl -o trivy_template.html https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/html.tpl 
+        
     - name: Upload Trivy report
       uses: aquasecurity/trivy-action@v0.35.0
       with:
