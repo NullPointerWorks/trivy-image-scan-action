@@ -1,0 +1,15 @@
+name: scan any docker image
+on:
+  workflow_dispatch:
+    inputs:
+      image-name:
+        description: "Name of the Docker image to scan (e.g., 'nginx:latest')"
+        required: true
+jobs:
+  scan-image:
+    runs-on: ubuntu-latest
+    steps:
+        - name: scan and upload report
+          uses: NullPointerWorks/trivy-image-scan-action@v1
+          with:
+            image-name: "${{ github.event.inputs.image-name }}"
